@@ -4,7 +4,7 @@ pub fn string(b: []const u8) Handle {
     if (b.len == 0) {
         return @enumFromInt(2);
     }
-    return zjb.string(b.ptr, b.len);
+    return zjb.string(b.ptr, @intCast(b.len));
 }
 
 pub fn constString(comptime b: []const u8) ConstHandle {
@@ -60,7 +60,7 @@ pub fn exportGlobal(comptime name: []const u8, comptime value: anytype) void {
 
 pub fn exportFn(comptime name: []const u8, comptime f: anytype) void {
     comptime var export_name: []const u8 = "zjb_fn_";
-    const type_info = @typeInfo(@TypeOf(f)).Fn;
+    const type_info = @typeInfo(@TypeOf(f)).@"fn";
     validateToJavascriptReturnType(type_info.return_type orelse void);
     inline for (type_info.params) |param| {
         validateFromJavascriptArgumentType(param.type orelse void);
@@ -93,13 +93,13 @@ pub extern "zjb" fn throw(handle: Handle) noreturn;
 pub extern "zjb" fn throwAndRelease(handle: Handle) noreturn;
 
 pub fn i8ArrayView(data: []const i8) Handle {
-    return zjb.i8ArrayView(data.ptr, data.len);
+    return zjb.i8ArrayView(data.ptr, @intCast(data.len));
 }
 pub fn u8ArrayView(data: []const u8) Handle {
-    return zjb.u8ArrayView(data.ptr, data.len);
+    return zjb.u8ArrayView(data.ptr, @intCast(data.len));
 }
 pub fn u8ClampedArrayView(data: []const u8) Handle {
-    return zjb.u8ClampedArrayView(data.ptr, data.len);
+    return zjb.u8ClampedArrayView(data.ptr, @intCast(data.len));
 }
 
 pub fn dataView(data: anytype) Handle {
@@ -227,7 +227,7 @@ pub const Handle = enum(i32) {
 
     fn invoke(handle: Handle, args: anytype, comptime RetType: type, comptime prefix: []const u8, comptime suffix: []const u8) RetType {
         validateFromJavascriptReturnType(RetType);
-        const fields = comptime @typeInfo(@TypeOf(args)).Struct.fields;
+        const fields = comptime @typeInfo(@TypeOf(args)).@"struct".fields;
         comptime var call_params: [fields.len + 1]std.builtin.Type.Fn.Param = undefined;
         comptime var extern_name: []const u8 = prefix;
 
@@ -247,7 +247,7 @@ pub const Handle = enum(i32) {
             extern_name = extern_name ++ comptime shortTypeName(field.type);
         }
 
-        const F = @Type(.{ .Fn = .{
+        const F = @Type(.{ .@"fn" = .{
             .calling_convention = .C,
             .is_generic = false,
             .is_var_args = false,
@@ -329,3 +329,7 @@ const zjb = struct {
     extern "zjb" fn u8ArrayView(ptr: *const anyopaque, size: u32) Handle;
     extern "zjb" fn u8ClampedArrayView(ptr: *const anyopaque, size: u32) Handle;
 };
+
+test {
+    @import("std").testing.refAllDeclsRecursive(@This());
+}
