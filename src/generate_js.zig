@@ -99,6 +99,11 @@ pub fn main() !void {
         \\    if (value === null) {
         \\      return 0;
         \\    }
+        \\    if (this._free_handles.length > 0) {
+        \\      const result = this._free_handles.pop();
+        \\      this._handles.set(result, value);
+        \\      return result;
+        \\    }
         \\    const result = this._next_handle;
         \\    this._handles.set(result, value);
         \\    this._next_handle++;
@@ -375,6 +380,7 @@ pub fn main() !void {
         \\    this._handles.set(1, window);
         \\    this._handles.set(2, "");
         \\    this._handles.set(3, this.exports);
+        \\    this._free_handles = [];
         \\    this._next_handle = 4;
         \\  }
         \\
@@ -628,6 +634,7 @@ const builtins = [_][]const u8{
     ,
     \\      "release": (id) => {
     \\        this._handles.delete(id);
+    \\        this._free_handles.push(id);
     \\      },
     ,
     \\      "dataview": (ptr, len) => {
