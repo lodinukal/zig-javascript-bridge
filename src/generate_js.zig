@@ -91,7 +91,7 @@ pub fn main() !void {
     defer out_file.close();
     const writer = out_file.writer();
 
-    try writer.writeAll("const ");
+    try writer.writeAll("export const ");
     try writer.writeAll(args[2]);
     try writer.writeAll(
         \\ = class {
